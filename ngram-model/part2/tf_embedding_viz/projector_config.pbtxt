@@ -1,0 +1,4 @@
+embeddings {
+  tensor_name: "WordVectors:0"
+  metadata_path: "tf_embedding_viz/metadata.tsv"
+}
