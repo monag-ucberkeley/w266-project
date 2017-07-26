@@ -63,7 +63,8 @@ class AddKTrigramLM(object):
 
         #### YOUR CODE HERE ####
         # Compute context counts
-
+        for tup in self.counts:
+            self.context_totals[tup] = sum(self.counts[tup].itervalues())
 
         #### END(YOUR CODE) ####
         # Total vocabulary size, for normalization
@@ -92,12 +93,17 @@ class AddKTrigramLM(object):
         #### YOUR CODE HERE ####
         # Hint: self.counts.get(...) and self.context_totals.get(...) may be
         # useful here. See note in defaultdict.md about how this works.
-
-
+        V = self.V
+        C_word_ctx = self.counts.get(context, {}).get(word, 0)
+        C_ctx = self.context_totals.get(context, 0)
+        
+        ## Unit test allows this to fail with Divide by Zero exception
+        # if C_ctx == 0 and k == 0.0:
+            # return 'k must be greater than 0.0 for Add-k smoothing'
+            
+        return  ( C_word_ctx + k ) / ( C_ctx + (k * V) )
 
         #### END(YOUR CODE) ####
-
-
 
 class KNTrigramLM(object):
     """Trigram LM with Kneser-Ney smoothing."""
@@ -181,10 +187,18 @@ class KNTrigramLM(object):
         for word in tokens:
             #### YOUR CODE HERE ####
             pass
-
-
-
-            #### END(YOUR CODE) ####
+        
+            # Trigram
+            if w_1 is not None and w_2 is not None:
+                self.counts[(w_2,w_1)][word] += 1
+                
+            # Bigram
+            if w_1 is not None:
+                self.counts[(w_1,)][word] += 1
+                
+            # Unigram
+            self.counts[()][word] += 1
+            
             # Update context
             w_2 = w_1
             w_1 = word
@@ -196,12 +210,20 @@ class KNTrigramLM(object):
 
         #### YOUR CODE HERE ####
         # Count the total for each context.
+        for t in self.counts.iteritems():
+            self.context_totals[t[0]] = sum(t[1].values())
 
         # Count the number of nonzero entries for each context.
-
+            self.context_nnz[t[0]] = np.count_nonzero(t[1].values())
 
         # Compute type fertilities, and the sum z_tf.
-
+        w_prev = None
+        for w in (tokens):
+            if w_prev != None:
+                self.type_contexts[w].add(w_prev)
+            w_prev = w
+        for w in (tokens):
+            self.type_fertility[w] = len(self.type_contexts[w])
 
         self.z_tf = float(sum(self.type_fertility.values()))
         #### END(YOUR CODE) ####
@@ -238,9 +260,16 @@ class KNTrigramLM(object):
         #### YOUR CODE HERE ####
         # Hint: self.counts.get(...) and self.context_totals.get(...) may be
         # useful here. See note in defaultdict.md about how this works.
-
-
-
+        V = self.V
+        C_word_ctx = self.counts.get(context, {}).get(word, 0)
+        C_ctx = self.context_totals.get(context, 0)
+        P_ad = 0.0
+        alpha = 1.0
+        if C_ctx > 0:
+            P_ad = max( C_word_ctx - delta, 0 ) / ( C_ctx )
+            alpha = (delta/C_ctx) * self.context_nnz.get(context, 0)
+        backoff = pw
+        return  P_ad + alpha * backoff
         #### END(YOUR CODE) ####
 
 
