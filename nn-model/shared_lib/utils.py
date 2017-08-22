@@ -191,6 +191,7 @@ def batch_generator(ids, batch_size, max_time):
     """Convert ids to data-matrix form."""
     # Clip to multiple of max_time for convenience
     clip_len = ((len(ids)-1) / batch_size) * batch_size
+    print clip_len
     input_w = ids[:clip_len]     # current word
     target_y = ids[1:clip_len+1]  # next word
     # Reshape so we can select columns
